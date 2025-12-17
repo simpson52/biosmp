@@ -1,0 +1,134 @@
+# 프로젝트 디자인 가이드라인: Material Design + Fluent Design Hybrid
+
+## 디자인 철학
+이 프로젝트는 Google의 Material Design과 Microsoft의 Fluent Design을 결합한 하이브리드 디자인 시스템을 사용합니다.
+
+## 핵심 디자인 원칙
+
+### 1. 깊이감 (Depth & Elevation)
+- **Elevation**: Material Design의 elevation 시스템 사용
+  - Level 0: 평면 (배경)
+  - Level 1: 2px shadow (카드 기본)
+  - Level 2: 4px shadow (호버 상태)
+  - Level 3: 8px shadow (모달, 드로어)
+- **Depth**: Fluent Design의 깊이감 표현
+  - Z-index 계층 구조 명확히 구분
+  - 그림자 방향: 아래쪽 (0deg, 0-8px blur)
+
+### 2. 색상 시스템
+- **Primary**: Material Blue (#1976D2) - 주요 액션
+- **Secondary**: Material Teal (#00796B) - 보조 액션
+- **Surface**: Fluent의 Acrylic 효과 (반투명 배경)
+- **Background**: #FAFAFA (Material Gray 50)
+- **Input Fields**: 노란색 강조 (#FFF9E6) 유지
+- **Error**: Material Red (#D32F2F)
+- **Success**: Material Green (#388E3C)
+
+### 3. 타이포그래피
+- **Font Family**: 'Roboto', 'Segoe UI', system-ui (Material + Fluent 혼합)
+- **Headings**: 
+  - H1: 32px, font-weight 500 (Material)
+  - H2: 24px, font-weight 500
+  - H3: 20px, font-weight 500
+- **Body**: 14px (Material standard)
+- **Caption**: 12px, color: rgba(0,0,0,0.6)
+- **Letter Spacing**: -0.01em (Fluent)
+
+### 4. 간격 시스템 (Spacing)
+- Material Design의 8px 그리드 시스템 사용
+- 기본 간격: 8px, 16px, 24px, 32px, 48px
+
+### 5. 둥근 모서리 (Border Radius)
+- **Small**: 4px (버튼, 입력 필드)
+- **Medium**: 8px (카드)
+- **Large**: 12px (모달)
+- **Pill**: 9999px (태그, 배지)
+
+### 6. 그림자 (Shadows)
+```css
+/* Material Elevation 1 */
+box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+
+/* Material Elevation 2 */
+box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+
+/* Material Elevation 4 */
+box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+```
+
+### 7. 애니메이션 (Motion)
+- **Duration**: 200ms (빠른), 300ms (표준), 500ms (느린)
+- **Easing**: 
+  - Material: cubic-bezier(0.4, 0.0, 0.2, 1)
+  - Fluent: cubic-bezier(0.1, 0.9, 0.2, 1)
+- **Hover**: transform scale(1.02) + elevation 증가
+- **Active**: transform scale(0.98)
+
+### 8. 입력 필드 (Input Fields)
+- 높이: 48px (Material standard)
+- 패딩: 16px 좌우
+- Border: 1px solid rgba(0,0,0,0.12)
+- Focus: 2px solid primary color
+- Ripple effect on click (Material)
+
+### 9. 버튼 (Buttons)
+- 높이: 40px (표준), 48px (강조)
+- 패딩: 16px 24px
+- Border radius: 4px
+- Elevation: 2px (기본), 4px (호버)
+- Ripple effect 필수
+
+### 10. 카드 (Cards)
+- Background: white
+- Border radius: 8px
+- Elevation: 1px (기본), 2px (호버)
+- Padding: 24px
+- Margin: 16px
+
+### 11. 테이블 (Tables)
+- Header: Material Gray 100 배경
+- Row hover: Material Gray 50
+- Border: 1px solid rgba(0,0,0,0.12)
+- Cell padding: 16px
+
+### 12. Acrylic 효과 (Fluent)
+- 반투명 배경: rgba(255,255,255,0.7)
+- Backdrop blur: blur(20px)
+- 주로 사이드바, 모달에 사용
+
+## 컴포넌트별 가이드라인
+
+### Input Section
+- 카드 elevation: 2
+- 입력 필드: Material 스타일
+- 요약 카드: Fluent Acrylic 효과
+
+### Analysis Table
+- Material Table 스타일
+- Row hover: subtle elevation 증가
+- 중요 수치: Material color 강조
+
+### Schedule Grid
+- 입력 필드: Material ripple effect
+- 감발 조건: Material Red 강조
+- 그리드 레이아웃: Fluent spacing
+
+### Curtailment Summary
+- Material Card 스타일
+- 합계 행: Material Gray 200 배경
+- 숫자 강조: Material Typography
+
+## 금지 사항
+- ❌ 과도한 그림자 (8px 이상 blur 금지)
+- ❌ 밝은 색상 배경 (눈의 피로)
+- ❌ 작은 폰트 (12px 미만)
+- ❌ 긴 애니메이션 (500ms 초과)
+- ❌ 둥근 모서리 과용 (pill shape 남용 금지)
+
+## 권장 사항
+- ✅ 명확한 계층 구조
+- ✅ 일관된 간격 사용
+- ✅ 적절한 대비율 (WCAG AA 준수)
+- ✅ 부드러운 전환 효과
+- ✅ 명확한 피드백 (hover, active 상태)
+
