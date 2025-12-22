@@ -55,16 +55,16 @@ export function InputSection({
   const profit65MW = calculateHourlyProfit(65, inputParameters.baseSMP);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {/* 주요 입력값 */}
       <Card>
         <CardHeader>
           <CardTitle>주요 입력값</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="baseSMP" className="text-xs font-medium text-material-gray-700">기준 SMP (원/kWh)</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="space-y-3">
+              <Label htmlFor="baseSMP" className="text-[14px] font-medium text-[#4E5968]">기준 SMP (원/kWh)</Label>
               <Input
                 id="baseSMP"
                 type="text"
@@ -72,11 +72,11 @@ export function InputSection({
                 onChange={(e) =>
                   handleInputChange("baseSMP", parseNumberInput(e.target.value))
                 }
-                className="bg-[#FFF9E6] border-[#FFE066] hover:bg-[#FFF5D1] focus-visible:border-primary-600"
+                className="bg-[#FFF9E6] hover:bg-[#FFF5D1] focus-visible:ring-[#3182F6]/20"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="pksCalorificValue" className="text-xs font-medium text-material-gray-700">PKS 단위열량 (kcal/kg)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="pksCalorificValue" className="text-[14px] font-medium text-[#4E5968]">PKS 단위열량 (kcal/kg)</Label>
               <Input
                 id="pksCalorificValue"
                 type="text"
@@ -87,11 +87,11 @@ export function InputSection({
                     parseNumberInput(e.target.value)
                   )
                 }
-                className="bg-[#FFF9E6] border-[#FFE066] hover:bg-[#FFF5D1] focus-visible:border-primary-600"
+                className="bg-[#FFF9E6] hover:bg-[#FFF5D1] focus-visible:ring-[#3182F6]/20"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="wcCalorificValue" className="text-xs font-medium text-material-gray-700">WC 단위열량 (kcal/kg)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="wcCalorificValue" className="text-[14px] font-medium text-[#4E5968]">WC 단위열량 (kcal/kg)</Label>
               <Input
                 id="wcCalorificValue"
                 type="text"
@@ -102,11 +102,11 @@ export function InputSection({
                     parseNumberInput(e.target.value)
                   )
                 }
-                className="bg-[#FFF9E6] border-[#FFE066] hover:bg-[#FFF5D1] focus-visible:border-primary-600"
+                className="bg-[#FFF9E6] hover:bg-[#FFF5D1] focus-visible:ring-[#3182F6]/20"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="pksUnitPrice" className="text-xs font-medium text-material-gray-700">PKS 단위가격 (원/톤)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="pksUnitPrice" className="text-[14px] font-medium text-[#4E5968]">PKS 단위가격 (원/톤)</Label>
               <Input
                 id="pksUnitPrice"
                 type="text"
@@ -117,11 +117,11 @@ export function InputSection({
                     parseNumberInput(e.target.value)
                   )
                 }
-                className="bg-[#FFF9E6] border-[#FFE066] hover:bg-[#FFF5D1] focus-visible:border-primary-600"
+                className="bg-[#FFF9E6] hover:bg-[#FFF5D1] focus-visible:ring-[#3182F6]/20"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="wcUnitPrice" className="text-xs font-medium text-material-gray-700">WC 단위가격 (원/톤)</Label>
+            <div className="space-y-3">
+              <Label htmlFor="wcUnitPrice" className="text-[14px] font-medium text-[#4E5968]">WC 단위가격 (원/톤)</Label>
               <Input
                 id="wcUnitPrice"
                 type="text"
@@ -132,7 +132,7 @@ export function InputSection({
                     parseNumberInput(e.target.value)
                   )
                 }
-                className="bg-[#FFF9E6] border-[#FFE066] hover:bg-[#FFF5D1] focus-visible:border-primary-600"
+                className="bg-[#FFF9E6] hover:bg-[#FFF5D1] focus-visible:ring-[#3182F6]/20"
               />
             </div>
           </div>
@@ -145,33 +145,33 @@ export function InputSection({
           <CardTitle>감발 임계값 (자동 계산)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-material-gray-700">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-3">
+              <Label className="text-[14px] font-medium text-[#4E5968]">
                 80MW = 65MW 공헌이익 지점 (원/kWh)
               </Label>
-              <div className="px-4 py-3 bg-material-gray-50 rounded-xl border border-material-gray-200">
-                <p className="text-lg font-semibold text-material-gray-900">
+              <div className="px-4 py-4 bg-[#F9FAFB] rounded-[20px] border-0">
+                <p className="text-[22px] font-bold text-[#191F28] tracking-[-0.02em]">
                   {formatNumber(curtailmentThresholds.threshold65MW, 2)}
                 </p>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-material-gray-700">
+            <div className="space-y-3">
+              <Label className="text-[14px] font-medium text-[#4E5968]">
                 80MW 공헌이익 = 0 지점 (원/kWh)
               </Label>
-              <div className="px-4 py-3 bg-material-gray-50 rounded-xl border border-material-gray-200">
-                <p className="text-lg font-semibold text-material-gray-900">
+              <div className="px-4 py-4 bg-[#F9FAFB] rounded-[20px] border-0">
+                <p className="text-[22px] font-bold text-[#191F28] tracking-[-0.02em]">
                   {formatNumber(curtailmentThresholds.threshold80MW, 2)}
                 </p>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-material-gray-700">
+            <div className="space-y-3">
+              <Label className="text-[14px] font-medium text-[#4E5968]">
                 65MW 공헌이익 = 0 지점 (원/kWh)
               </Label>
-              <div className="px-4 py-3 bg-material-gray-50 rounded-xl border border-material-gray-200">
-                <p className="text-lg font-semibold text-material-gray-900">
+              <div className="px-4 py-4 bg-[#F9FAFB] rounded-[20px] border-0">
+                <p className="text-[22px] font-bold text-[#191F28] tracking-[-0.02em]">
                   {formatNumber(curtailmentThresholds.thresholdStop, 2)}
                 </p>
               </div>
@@ -186,27 +186,27 @@ export function InputSection({
           <CardTitle>시간당 기대 수익 (만원)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="text-center p-6 bg-primary-50 rounded-lg border border-primary-200 elevation-1 transition-all duration-material-standard hover:elevation-2">
-              <p className="text-xs font-medium text-material-gray-600 mb-2">93MW (정상)</p>
-              <p className="text-2xl font-medium text-material-gray-900 mb-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="text-center p-6 bg-[#E8F3FF] rounded-[20px] border-0 transition-all duration-200 active:scale-[0.96]">
+              <p className="text-[14px] font-medium text-[#4E5968] mb-3">93MW (정상)</p>
+              <p className="text-[26px] font-bold text-[#191F28] mb-2 tracking-[-0.03em]">
                 {formatCurrency(profit93MW)}
               </p>
-              <p className="text-xs text-material-gray-500">만원/h</p>
+              <p className="text-[14px] text-[#8B95A1]">만원/h</p>
             </div>
-            <div className="text-center p-6 bg-secondary-50 rounded-lg border border-secondary-200 elevation-1 transition-all duration-material-standard hover:elevation-2">
-              <p className="text-xs font-medium text-material-gray-600 mb-2">80MW (감발1)</p>
-              <p className="text-2xl font-medium text-material-gray-900 mb-1">
+            <div className="text-center p-6 bg-[#E8F3FF] rounded-[20px] border-0 transition-all duration-200 active:scale-[0.96]">
+              <p className="text-[14px] font-medium text-[#4E5968] mb-3">80MW (감발1)</p>
+              <p className="text-[26px] font-bold text-[#191F28] mb-2 tracking-[-0.03em]">
                 {formatCurrency(profit80MW)}
               </p>
-              <p className="text-xs text-material-gray-500">만원/h</p>
+              <p className="text-[14px] text-[#8B95A1]">만원/h</p>
             </div>
-            <div className="text-center p-6 bg-success-50 rounded-lg border border-success-200 elevation-1 transition-all duration-material-standard hover:elevation-2">
-              <p className="text-xs font-medium text-material-gray-600 mb-2">65MW (감발2)</p>
-              <p className="text-2xl font-medium text-material-gray-900 mb-1">
+            <div className="text-center p-6 bg-[#E8F3FF] rounded-[20px] border-0 transition-all duration-200 active:scale-[0.96]">
+              <p className="text-[14px] font-medium text-[#4E5968] mb-3">65MW (감발2)</p>
+              <p className="text-[26px] font-bold text-[#191F28] mb-2 tracking-[-0.03em]">
                 {formatCurrency(profit65MW)}
               </p>
-              <p className="text-xs text-material-gray-500">만원/h</p>
+              <p className="text-[14px] text-[#8B95A1]">만원/h</p>
             </div>
           </div>
         </CardContent>

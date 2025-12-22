@@ -145,45 +145,45 @@ export function DetailedAnalysisModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-auto border border-material-gray-200 rounded-lg">
+        <div className="flex-1 overflow-auto border-0 rounded-[24px] bg-white">
           <Table className="min-w-full">
-            <TableHeader className="sticky top-0 z-10 bg-material-gray-50">
-              <TableRow className="border-b-2 border-material-gray-300">
-                <TableHead className="sticky left-0 z-20 bg-material-gray-50 min-w-[80px] font-semibold text-material-gray-900">
+            <TableHeader className="sticky top-0 z-10 bg-[#F9FAFB]">
+              <TableRow className="border-b border-gray-100">
+                <TableHead className="sticky left-0 z-20 bg-[#F9FAFB] min-w-[80px] font-bold text-[#191F28] tracking-[-0.02em]">
                   출력<br />
-                  <span className="text-xs font-normal text-material-gray-500">(MW)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(MW)</span>
                 </TableHead>
-                <TableHead className="min-w-[100px] font-semibold text-material-gray-700 text-center">
+                <TableHead className="min-w-[100px] font-bold text-[#191F28] text-center tracking-[-0.02em]">
                   송전량<br />
-                  <span className="text-xs font-normal text-material-gray-500">(MWh/h)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(MWh/h)</span>
                 </TableHead>
-                <TableHead className="min-w-[100px] font-semibold text-material-gray-700 text-center">
+                <TableHead className="min-w-[100px] font-bold text-[#191F28] text-center tracking-[-0.02em]">
                   발전효율<br />
-                  <span className="text-xs font-normal text-material-gray-500">(%)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(%)</span>
                 </TableHead>
-                <TableHead className="min-w-[100px] font-semibold text-material-gray-700 text-center">
+                <TableHead className="min-w-[100px] font-bold text-[#191F28] text-center tracking-[-0.02em]">
                   송전효율<br />
-                  <span className="text-xs font-normal text-material-gray-500">(%)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(%)</span>
                 </TableHead>
-                <TableHead className="min-w-[100px] font-semibold text-material-gray-700 text-center">
+                <TableHead className="min-w-[100px] font-bold text-[#191F28] text-center tracking-[-0.02em]">
                   소내소비율<br />
-                  <span className="text-xs font-normal text-material-gray-500">(%)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(%)</span>
                 </TableHead>
-                <TableHead className="min-w-[120px] font-semibold text-material-gray-700 text-center border-l-2 border-material-gray-300">
+                <TableHead className="min-w-[120px] font-bold text-[#191F28] text-center border-l border-gray-100 tracking-[-0.02em]">
                   매출 계<br />
-                  <span className="text-xs font-normal text-material-gray-500">(백만원)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(백만원)</span>
                 </TableHead>
-                <TableHead className="min-w-[120px] font-semibold text-material-gray-700 text-center">
+                <TableHead className="min-w-[120px] font-bold text-[#191F28] text-center tracking-[-0.02em]">
                   비용 계<br />
-                  <span className="text-xs font-normal text-material-gray-500">(백만원)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(백만원)</span>
                 </TableHead>
-                <TableHead className="min-w-[120px] font-semibold text-material-gray-700 text-center border-l-2 border-material-gray-300 bg-amber-50">
+                <TableHead className="min-w-[120px] font-bold text-[#191F28] text-center border-l border-gray-100 bg-[#FFF9E6] tracking-[-0.02em]">
                   공헌이익<br />
-                  <span className="text-xs font-normal text-material-gray-500">(백만원/일)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(백만원/일)</span>
                 </TableHead>
-                <TableHead className="min-w-[120px] font-semibold text-material-gray-700 text-center bg-primary-50">
+                <TableHead className="min-w-[120px] font-bold text-[#191F28] text-center bg-[#E8F3FF] tracking-[-0.02em]">
                   시간당 수익<br />
-                  <span className="text-xs font-normal text-material-gray-500">(만원/h)</span>
+                  <span className="text-[12px] font-normal text-[#8B95A1]">(만원/h)</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -199,55 +199,55 @@ export function DetailedAnalysisModal({
                 return (
                   <TableRow
                     key={output}
-                    className={`hover:bg-material-gray-50/50 transition-colors border-b border-material-gray-100 ${
-                      isKnownValue ? "bg-blue-50/30" : ""
+                    className={`${
+                      isKnownValue ? "bg-[#E8F3FF]/30" : ""
                     }`}
                   >
-                    <TableCell className="sticky left-0 z-10 bg-white font-semibold">
+                    <TableCell className="sticky left-0 z-10 bg-white font-bold">
                       <div className="flex items-center gap-2">
-                        <span className="text-base">{output}MW</span>
+                        <span className="text-[17px] text-[#191F28] tracking-[-0.02em]">{output}MW</span>
                         {isKnownValue && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          <span className="px-3 py-1 rounded-[12px] text-[12px] font-bold bg-[#E8F3FF] text-[#3182F6]">
                             기준값
                           </span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center text-sm">
+                    <TableCell className="text-center text-[14px] text-[#191F28] tracking-[-0.02em]">
                       {formatNumber(analysis.transmissionAmount, 2)}
                     </TableCell>
-                    <TableCell className="text-center text-sm">
+                    <TableCell className="text-center text-[14px] text-[#191F28] tracking-[-0.02em]">
                       {formatPercent(analysis.generationEfficiency)}
                     </TableCell>
-                    <TableCell className="text-center text-sm">
+                    <TableCell className="text-center text-[14px] text-[#191F28] tracking-[-0.02em]">
                       {formatPercent(analysis.transmissionEfficiency)}
                     </TableCell>
-                    <TableCell className="text-center text-sm">
+                    <TableCell className="text-center text-[14px] text-[#191F28] tracking-[-0.02em]">
                       {formatPercent(analysis.internalConsumptionRate)}
                     </TableCell>
-                    <TableCell className="text-center border-l-2 border-material-gray-200">
-                      <span className="text-sm font-medium text-emerald-700">
+                    <TableCell className="text-center border-l border-gray-100">
+                      <span className="text-[14px] font-bold text-[#3182F6] tracking-[-0.02em]">
                         {formatCurrency(analysis.salesTotal)}
                       </span>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="text-sm font-medium text-red-700">
+                      <span className="text-[14px] font-bold text-[#F04452] tracking-[-0.02em]">
                         {formatCurrency(totalCost)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center border-l-2 border-material-gray-200 bg-amber-50">
+                    <TableCell className="text-center border-l border-gray-100 bg-[#FFF9E6]">
                       <span
-                        className={`text-base font-bold ${
+                        className={`text-[17px] font-bold tracking-[-0.02em] ${
                           isProfit
-                            ? "text-emerald-700"
-                            : "text-red-600"
+                            ? "text-[#3182F6]"
+                            : "text-[#F04452]"
                         }`}
                       >
                         {formatCurrency(analysis.contributionProfit)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center bg-primary-50">
-                      <span className="text-base font-semibold text-primary-700">
+                    <TableCell className="text-center bg-[#E8F3FF]">
+                      <span className="text-[17px] font-bold text-[#3182F6] tracking-[-0.02em]">
                         {formatNumber(analysis.hourlyExpectedProfit)}
                       </span>
                     </TableCell>
@@ -258,10 +258,10 @@ export function DetailedAnalysisModal({
           </Table>
         </div>
 
-        <div className="text-xs text-material-gray-500 space-y-1 pt-4 border-t border-material-gray-200">
+        <div className="text-[14px] text-[#4E5968] space-y-2 pt-6 border-t border-gray-100 tracking-[-0.02em]">
           <p>• 93MW, 80MW, 65MW는 실제 측정된 기준값이며, 그 사이 값은 선형 보간으로 계산됩니다</p>
           <p>• 기준값은 파란색 배경으로 표시됩니다</p>
-          <p>• 공헌이익이 양수면 녹색, 음수면 빨간색으로 표시됩니다</p>
+          <p>• 공헌이익이 양수면 파란색, 음수면 빨간색으로 표시됩니다</p>
         </div>
       </DialogContent>
     </Dialog>

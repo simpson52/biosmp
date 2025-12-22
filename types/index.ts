@@ -105,6 +105,9 @@ export interface PlantAnalysisResult {
   hourlyExpectedProfit: number;
 }
 
+// 데이터 소스 타입
+export type DataSource = "manual" | "exchange";
+
 // 전체 애플리케이션 상태
 export interface AppState {
   // 기본 입력 파라미터
@@ -113,7 +116,15 @@ export interface AppState {
   curtailmentThresholds: CurtailmentThresholds;
   // 발전소 행별 입력값 (93MW, 80MW, 65MW)
   plantRowInputs: Record<OutputLevel, PlantRowInput>;
-  // 시간대별 SMP 가격 변동 추이 데이터
+  // 시간대별 SMP 가격 변동 추이 데이터 (매뉴얼 데이터)
   hourlySMPData: HourlySMPData;
+  // 전력거래소 SMP 데이터
+  exchangeSMPData: HourlySMPData | null;
+  // 현재 선택된 데이터 소스
+  currentDataSource: DataSource;
+  // 감발 기준 SMP 가격 (원/kWh) - 시간대별 SMP 테이블에서 사용
+  curtailmentThreshold: number;
+  // 현재 표시 중인 SMP 데이터 (매뉴얼 또는 전력거래소)
+  currentSMPData: HourlySMPData;
 }
 

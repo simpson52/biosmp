@@ -416,7 +416,12 @@ export function SMPPriceTable({ hourlySMPData, readOnly = false }: SMPPriceTable
                     {dailyData.hourlyPrices.map((price, hourIndex) => {
                       const isBelowThreshold = price > 0 && price <= curtailmentThreshold;
                       // 가격이 0이면 빈 셀로 표시 (데이터 없음)
-                      const displayPrice = price > 0 ? Math.round(price * 100) / 100 : "";
+                      // 전력거래소 탭일 때는 소수점 한자리, 매뉴얼 탭일 때는 소수점 두자리
+                      const displayPrice = price > 0 
+                        ? (dataSource === "exchange" 
+                          ? Math.round(price * 10) / 10 
+                          : Math.round(price * 100) / 100)
+                        : "";
                       return (
                         <td
                           key={`${dailyData.date}-hour-${hourIndex + 1}`}

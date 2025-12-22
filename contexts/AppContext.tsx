@@ -1,12 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import type {
   AppState,
   InputParameters,
   CurtailmentThresholds,
   PlantRowInput,
   OutputLevel,
+  HourlySMPData,
+  DataSource,
 } from "@/types";
 import { loadStateFromStorage, saveStateToStorage } from "@/lib/storage";
 
@@ -15,6 +17,10 @@ interface AppContextType {
   updateInputParameters: (params: InputParameters) => void;
   updateCurtailmentThresholds: (thresholds: CurtailmentThresholds) => void;
   updatePlantRowInput: (output: OutputLevel, input: PlantRowInput) => void;
+  updateCurtailmentThreshold: (threshold: number) => void;
+  updateCurrentSMPData: (data: HourlySMPData) => void;
+  updateExchangeSMPData: (data: HourlySMPData | null) => void;
+  updateCurrentDataSource: (source: DataSource) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -63,6 +69,25 @@ const defaultState: AppState = {
       },
     ],
   },
+  exchangeSMPData: null, // 전력거래소 SMP 데이터
+  currentDataSource: "manual" as DataSource, // 현재 선택된 데이터 소스
+  curtailmentThreshold: 80, // 감발 기준 SMP 가격 (원/kWh)
+  currentSMPData: {
+    dailyData: [
+      {
+        date: "2024-12-13",
+        hourlyPrices: [79, 72, 71, 69, 69, 70, 73, 79, 79, 72, 71, 70, 70, 72, 77, 78, 115, 123, 123, 123, 78, 78, 78, 78],
+      },
+      {
+        date: "2024-12-14",
+        hourlyPrices: [79, 71, 71, 71, 71, 71, 71, 73, 71, 66, 66, 66, 66, 66, 70, 73, 79, 123, 123, 79, 79, 79, 79, 79],
+      },
+      {
+        date: "2024-12-15",
+        hourlyPrices: [79, 70, 69, 69, 69, 70, 71, 112, 115, 114, 95, 95, 92, 95, 95, 95, 114, 95, 95, 95, 92, 82, 98, 98],
+      },
+    ],
+  }, // 현재 표시 중인 SMP 데이터 (기본값: 매뉴얼 데이터)
 };
 
 export function AppProvider({ children }: { readonly children: React.ReactNode }) {
@@ -78,6 +103,9 @@ export function AppProvider({ children }: { readonly children: React.ReactNode }
         ...defaultState,
         ...savedState,
         hourlySMPData: savedState.hourlySMPData || defaultState.hourlySMPData,
+        exchangeSMPData: savedState.exchangeSMPData ?? defaultState.exchangeSMPData,
+        currentDataSource: savedState.currentDataSource || defaultState.currentDataSource,
+        currentSMPData: savedState.currentSMPData || savedState.hourlySMPData || defaultState.hourlySMPData,
       };
       setState(mergedState);
     }
@@ -115,14 +143,50 @@ export function AppProvider({ children }: { readonly children: React.ReactNode }
     }));
   };
 
+  const updateCurtailmentThreshold = (threshold: number) => {
+    setState((prev) => ({
+      ...prev,
+      curtailmentThreshold: threshold,
+    }));
+  };
+
+  const updateCurrentSMPData = useCallback((data: HourlySMPData) => {
+    setState((prev) => ({
+      ...prev,
+      currentSMPData: data,
+    }));
+  }, []);
+
+  const updateExchangeSMPData = useCallback((data: HourlySMPData | null) => {
+    setState((prev) => ({
+      ...prev,
+      exchangeSMPData: data,
+    }));
+  }, []);
+
+  const updateCurrentDataSource = useCallback((source: DataSource) => {
+    setState((prev) => ({
+      ...prev,
+      currentDataSource: source,
+      // 데이터 소스 변경 시 currentSMPData도 업데이트
+      currentSMPData: source === "manual" 
+        ? prev.hourlySMPData 
+        : (prev.exchangeSMPData || prev.hourlySMPData),
+    }));
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       state,
       updateInputParameters,
       updateCurtailmentThresholds,
       updatePlantRowInput,
+      updateCurtailmentThreshold,
+      updateCurrentSMPData,
+      updateExchangeSMPData,
+      updateCurrentDataSource,
     }),
-    [state]
+    [state, updateCurrentSMPData, updateExchangeSMPData, updateCurrentDataSource]
   );
 
   return (

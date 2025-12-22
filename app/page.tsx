@@ -10,13 +10,13 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "simulation">("dashboard");
 
   return (
-    <div className="min-h-screen bg-material-gray-50 flex flex-col">
+    <div className="min-h-screen bg-[#F2F4F6] flex flex-col">
       {/* 네비게이션 바 */}
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* 메인 컨텐츠 */}
-      <main className="flex-1 p-4 md:p-6 lg:p-8 transition-colors duration-material-standard">
-        <div className="max-w-[1400px] mx-auto">
+      <main className="flex-1 p-6 md:p-8 transition-colors duration-200">
+        <div className="max-w-7xl mx-auto">
           {/* 탭 컨텐츠 */}
           {activeTab === "dashboard" ? (
             <Dashboard />
