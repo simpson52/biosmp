@@ -5,9 +5,10 @@ import { AppProvider, useAppContext } from "@/contexts/AppContext";
 import { Navigation } from "@/components/Navigation";
 import { Dashboard } from "@/components/Dashboard";
 import { Simulation } from "@/components/Simulation";
+import { Settings } from "@/components/Settings";
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "simulation">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "simulation" | "settings">("dashboard");
 
   return (
     <div className="min-h-screen bg-[#F2F4F6] flex flex-col">
@@ -20,8 +21,10 @@ function AppContent() {
           {/* 탭 컨텐츠 */}
           {activeTab === "dashboard" ? (
             <Dashboard />
-          ) : (
+          ) : activeTab === "simulation" ? (
             <Simulation />
+          ) : (
+            <Settings />
           )}
         </div>
       </main>

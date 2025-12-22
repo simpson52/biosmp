@@ -29,6 +29,7 @@ interface DetailedAnalysisModalProps {
   onOpenChange: (open: boolean) => void;
   inputParameters: InputParameters;
   plantRowInputs: Record<93 | 80 | 65, PlantRowInput>;
+  formulas?: import("@/types").AnalysisTableFormulas;
 }
 
 /**
@@ -104,6 +105,7 @@ export function DetailedAnalysisModal({
   onOpenChange,
   inputParameters,
   plantRowInputs,
+  formulas,
 }: DetailedAnalysisModalProps) {
   // 93MW부터 65MW까지 1MW 단위로 분석 결과 계산
   const detailedResults = useMemo(() => {
@@ -121,7 +123,8 @@ export function DetailedAnalysisModal({
         output,
         inputParameters,
         interpolatedInput,
-        inputParameters.baseSMP
+        inputParameters.baseSMP,
+        formulas
       );
 
       results.push({

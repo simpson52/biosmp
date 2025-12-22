@@ -13,23 +13,27 @@ export function Dashboard() {
 
   // 전체 요약 통계 계산
   const summaryStats = useMemo(() => {
+    const formulas = state.calculationSettings.analysisTableFormulas;
     const analysis93 = calculatePlantAnalysis(
       93,
       state.inputParameters,
       state.plantRowInputs[93],
-      state.inputParameters.baseSMP
+      state.inputParameters.baseSMP,
+      formulas
     );
     const analysis80 = calculatePlantAnalysis(
       80,
       state.inputParameters,
       state.plantRowInputs[80],
-      state.inputParameters.baseSMP
+      state.inputParameters.baseSMP,
+      formulas
     );
     const analysis65 = calculatePlantAnalysis(
       65,
       state.inputParameters,
       state.plantRowInputs[65],
-      state.inputParameters.baseSMP
+      state.inputParameters.baseSMP,
+      formulas
     );
 
     return {
@@ -40,7 +44,7 @@ export function Dashboard() {
       contribution80: analysis80.contributionProfit,
       contribution65: analysis65.contributionProfit,
     };
-  }, [state.inputParameters, state.plantRowInputs]);
+  }, [state.inputParameters, state.plantRowInputs, state.calculationSettings]);
 
   // 감발 임계값 계산 (자동 계산)
   const curtailmentThresholds = useMemo(() => {

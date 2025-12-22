@@ -12,6 +12,7 @@ interface CurtailmentSummaryProps {
   readonly inputParameters: InputParameters;
   readonly plantRowInputs: Record<OutputLevel, PlantRowInput>;
   readonly curtailmentThreshold: number; // 감발 기준 SMP 가격
+  readonly formulas?: import("@/types").AnalysisTableFormulas;
 }
 
 interface DailyCurtailmentData {
@@ -47,6 +48,7 @@ export function CurtailmentSummary({
   inputParameters,
   plantRowInputs,
   curtailmentThreshold,
+  formulas,
 }: CurtailmentSummaryProps) {
   /**
    * 연속 구간 정보 인터페이스
@@ -203,7 +205,8 @@ export function CurtailmentSummary({
         80,
         inputParameters,
         plantRowInputs[80],
-        averageSMP
+        averageSMP,
+        formulas
       );
       const hourlyProfit = analysis.hourlyExpectedProfit; // 만원
 

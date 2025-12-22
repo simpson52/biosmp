@@ -75,22 +75,61 @@
 
 ### 2.2 컴포넌트 구조
 
+프로젝트는 **FSD (Feature-Sliced Design)** 아키텍처를 따릅니다. 주요 컴포넌트는 `features/` 디렉토리에 모듈화되어 있으며, `components/` 디렉토리는 하위 호환성을 위한 re-export를 제공합니다.
+
+#### 주요 컴포넌트 (Features)
+
+```
+features/
+├── formula-editor/              # 계산식 텍스트 편집기
+│   ├── ui/                      # UI 컴포넌트 (7개)
+│   ├── model/                   # Custom Hooks (4개)
+│   └── lib/                     # 유틸리티 함수 (4개)
+├── contribution-profit-chart/   # 공헌이익 비교 차트
+│   ├── ui/                      # UI 컴포넌트 (4개)
+│   └── lib/                     # 유틸리티 함수 (6개)
+├── intuitive-formula-editor/    # 직관적 계산식 편집기
+│   ├── ui/                      # UI 컴포넌트 (7개)
+│   └── model/                   # Custom Hooks (1개)
+├── smp-price-table/             # SMP 가격 테이블
+│   ├── ui/                      # UI 컴포넌트 (4개)
+│   ├── model/                   # Custom Hooks (1개)
+│   └── lib/                     # 유틸리티 함수 (2개)
+├── analysis-table/              # 분석 테이블
+│   ├── ui/                      # UI 컴포넌트 (3개)
+│   └── constants/               # 상수 정의
+└── formula-block-builder/       # 계산식 블록 빌더
+    ├── ui/                      # UI 컴포넌트 (4개)
+    └── lib/                     # 유틸리티 함수 (2개)
+```
+
+#### 공유 리소스
+
+```
+shared/
+└── formula/                     # 계산식 관련 공유 로직
+    ├── field-definitions.ts      # 필드 정의
+    └── default-value-calculator.ts # 기본값 계산
+```
+
+#### 레거시 컴포넌트 (하위 호환성)
+
 ```
 components/
-├── Navigation.tsx          # 네비게이션 바 (탭 전환)
-├── Dashboard.tsx           # 대시보드 탭 컨텐츠
-├── Simulation.tsx          # 시뮬레이션 탭 컨텐츠
-├── Settings.tsx            # 설정 페이지
-├── AnalysisTableEditor.tsx # 수익 비교 분석 테이블 편집기
-├── TextFormulaEditor.tsx   # 계산식 텍스트 편집기 (변수 강조, 예상 결과 표시)
-├── IntuitiveFormulaEditor.tsx # 직관적 계산식 편집기
-├── InputSection.tsx        # 입력 섹션 (주요 입력값, 요약 카드)
-├── AnalysisTable.tsx       # 수익 비교 분석 테이블
-├── DetailedAnalysisModal.tsx  # 상세 분석 모달 (93MW~65MW 1MW 단위)
-├── SMPPriceTable.tsx       # 시간대별 SMP 가격 변동 추이 테이블
-├── ContributionProfitChart.tsx  # 공헌이익 비교 차트 (SMP vs 공헌이익)
-├── CurtailmentSummary.tsx  # 감발 요약 테이블
-└── ui/                     # Shadcn UI 컴포넌트
+├── Navigation.tsx              # 네비게이션 바 (탭 전환)
+├── Dashboard.tsx               # 대시보드 탭 컨텐츠
+├── Simulation.tsx              # 시뮬레이션 탭 컨텐츠
+├── Settings.tsx                # 설정 페이지
+├── AnalysisTableEditor.tsx     # 수익 비교 분석 테이블 편집기
+├── TextFormulaEditor.tsx       # → features/formula-editor (re-export)
+├── IntuitiveFormulaEditor.tsx  # → features/intuitive-formula-editor (re-export)
+├── InputSection.tsx             # 입력 섹션 (주요 입력값, 요약 카드)
+├── AnalysisTable.tsx           # → features/analysis-table (re-export)
+├── DetailedAnalysisModal.tsx   # 상세 분석 모달 (93MW~65MW 1MW 단위)
+├── SMPPriceTable.tsx           # → features/smp-price-table (re-export)
+├── ContributionProfitChart.tsx # → features/contribution-profit-chart (re-export)
+├── CurtailmentSummary.tsx      # 감발 요약 테이블
+└── ui/                         # Shadcn UI 컴포넌트
     ├── button.tsx
     ├── card.tsx
     ├── dialog.tsx
@@ -101,6 +140,8 @@ components/
     ├── table.tsx
     └── textarea.tsx
 ```
+
+> **참고**: FSD 구조에 대한 상세 가이드라인은 [6.4 아키텍처 원칙: FSD](#64-아키텍처-원칙-fsd-feature-sliced-design) 섹션을 참조하세요.
 
 ### 2.3 상태 관리
 
@@ -146,6 +187,7 @@ components/
    - IF (출력 == 93): 7.6
    - ELSE: (93 / 출력) * 7.6 * 0.95
    - *주의: 큰 수가 분자에 위치 (93/80, 93/65)*
+   - *로직: 이전 행 참조 대신 기준값 93을 활용하여 계산*
 
 8. **수전요금(원/kWh)** = 1,158,000 / (송전량[시간당] * 24 * 316)
 
@@ -170,16 +212,25 @@ components/
 
 감발 임계값은 사용자 입력이 아닌 **자동 계산**됩니다:
 
-1. **80MW 공헌이익 = 0 지점**
+1. **80MW 공헌이익 = 0 지점** (`threshold80MW`)
    - 80MW 출력 시 공헌이익이 0이 되는 SMP 가격
+   - 이 가격 이하에서는 80MW 운전 시 수익이 없음
 
-2. **80MW = 65MW 공헌이익 지점**
+2. **80MW = 65MW 공헌이익 지점** (`threshold65MW`)
    - 80MW와 65MW의 공헌이익이 같아지는 SMP 가격
+   - 이 가격 이하에서는 65MW 운전이 더 유리함
 
-3. **65MW 공헌이익 = 0 지점**
+3. **65MW 공헌이익 = 0 지점** (`thresholdStop`)
    - 65MW 출력 시 공헌이익이 0이 되는 SMP 가격
+   - 이 가격 이하에서는 정지(미운영)를 고려해야 함 (기동요금 고려)
 
 **계산 함수**: `calculateCurtailmentThresholds()` (`lib/calculations.ts`)
+
+**감발 시간 판정 로직:**
+- 각 시간대별 SMP 값을 감발 임계값과 비교
+- IF (SMP ≤ 80MW 감발 임계값 AND SMP > 65MW 감발 임계값) THEN 감발시간 카운트 (80MW 운전)
+- IF (SMP ≤ 65MW 감발 임계값 AND SMP > 정지 임계값) THEN 감발시간 카운트 (65MW 운전)
+- IF (SMP ≤ 정지 임계값) THEN 감발시간 카운트 (정지, 기동요금 고려)
 
 ## 4. 주요 기능
 
@@ -189,17 +240,32 @@ components/
   - 설정 페이지에서 "수익 비교 분석 테이블 편집" 선택
   - 사용자 입력값과 계산값을 섹션별로 분리하여 표시
   - 한 줄에 5개씩 블록 형태로 표시 (반응형: 모바일 1열, 태블릿 2-3열, 데스크톱 5열)
-  - 블록 클릭 시 아래에 편집 카드 표시
+  - 블록 클릭 시 아래에 편집 카드 표시 (전체 너비로 확장)
+  - 기본 공식이 자동으로 입력 필드에 표시됨 (변수 블록 형태)
 - **계산식 입력 편집기**
   - 한글 변수명으로 계산식 입력 가능
   - 변수 시각적 강조: 빨간색 텍스트와 회색 배경의 둥근 사각형으로 표시
-  - 변수 자동완성: `/` 키로 변수 목록 표시, 입력 중 자동완성 제공
+  - 변수는 단일, 불가분의 개체로 처리 (부분 편집 불가)
+  - 변수 자동완성: 한글 변수명 입력 시 자동완성 드롭다운 표시
+    - 입력 필드 바로 아래에 상대적으로 배치
+    - 화살표 키로 이동, Enter/Tab 키로 선택
+    - 최대 10개까지 표시
   - 계산식 예상 결과: 입력한 계산식의 예상 결과를 실시간으로 계산하여 표시
-  - 고정값/계산식 모드 선택 가능
+    - 계산식 입력 필드와 동일한 디자인으로 통일
+    - 93MW 기준으로 계산된 예상 결과 제공
+    - 계산 오류 시 안내 메시지 표시
+  - 모드 선택: 계산식(왼쪽) / 고정값(오른쪽) 순서로 배치
+  - 변수 값 태그: 입력한 계산식에 사용된 변수의 실제 값을 태그 형태로 표시
+    - 형식: "변수명 값 단위"
+    - 93MW 기준으로 계산된 값 표시
 - **변수 매핑 시스템**
   - 영문 변수명을 한글 비즈니스 용어로 자동 변환
-  - 카테고리별 변수 그룹화 (기본입력, 계산결과, 상수)
+  - 카테고리별 변수 그룹화
+    - 사용자 입력 값: 출력, SMP 가격, 송전효율, 소내소비율, PKS 단위열량, WC 단위열량, PKS 단위가격, WC 단위가격
+    - 계산 값: 발전효율, 송전량, PKS 연료사용량, WC 혼소율, PKS 발전단가, WC 발전단가, 총 발전단가, 약품비, 수전요금, 매출 전력량, 매출 REC, 매출 계, 비용 연료비, 비용 약품비, 비용 수전료, 시간당 수익
+    - 고정 값: WC 연료사용량
   - 변수 설명 및 단위 정보 제공
+  - 사용 가능한 변수 가이드: 카테고리별로 그룹화하여 표시
 
 ### 4.1 실시간 계산
 - 기준 SMP 변경 시 즉시 모든 수치 재계산
@@ -248,17 +314,27 @@ components/
 - 감발 기준가격 이하 연속 6시간 이상 구간 자동 감지
 - 가장 긴 구간 우선 선택 (동일 길이 시 전날 24시와 오늘 1시가 모두 기준 이하인 구간 우선)
 - 감발 평균 SMP 계산 (연속 6시간 이상 구간만 집계)
+  - **감발 평균 SMP(원/kWh)**: SUM(감발 시간대의 SMP 값) / 감발 시간대 개수
+  - 감발 조건에 해당하는 시간대의 SMP 값들의 평균
 - 감발시간, 시간당 수익, 총 금액 계산
+  - **감발 시간당 수익(만원)**: 감발 평균 SMP를 기준 SMP로 사용하여 해당 출력(80MW 또는 65MW)의 시간당 기대수익 계산
+    - 감발 평균 SMP가 80MW 임계값 이하이면 80MW 기준으로 계산
+    - 감발 평균 SMP가 65MW 임계값 이하이면 65MW 기준으로 계산
+  - **감발 총 금액(만원)**: 감발시간 × 감발 시간당 수익
 - 매뉴얼/전력거래소 탭 전환에 따른 동적 데이터 표시
 - 단위 표시: 시간당 수익 및 총 금액은 "만원" 단위
 - 계산 기준 안내: 사용자 이해를 위한 명확한 설명 제공
 
 ### 4.7 시각적 피드백
-- **입력 필드**: 노란색 배경 (#FFF9E6)
+- **입력 필드 구분**
+  - 사용자가 입력 가능한 변수(SMP, 효율, 단가 등): 노란색 배경 (#FFF9E6)
+  - 계산된 값: 흰색이나 회색 배경으로 구분
 - **공헌이익**: 양수(녹색), 음수(빨간색)
 - **매출**: 녹색 강조
 - **비용**: 빨간색 강조
 - **감발 조건**: 빨간색 배경 (#fcb1b1)
+  - 시간대별 SMP 가격 테이블에서 감발 기준 이하 가격 셀 강조
+  - 감발 요약 테이블의 중요 수치(감발시간, 총 금액 등)는 노란색 배경으로 강조 가능
 
 ## 5. 데이터 구조
 
@@ -382,16 +458,41 @@ npm start
 
 ### 6.3 코드 구조
 
+프로젝트는 **FSD (Feature-Sliced Design)** 아키텍처를 따릅니다.
+
 ```
 cursor_biosmp/
 ├── app/
 │   ├── globals.css          # 전역 스타일
 │   ├── layout.tsx           # 루트 레이아웃
 │   └── page.tsx             # 메인 페이지
-├── components/              # React 컴포넌트
+├── components/              # React 컴포넌트 (레거시 호환용 re-export)
+│   ├── TextFormulaEditor.tsx      # → features/formula-editor
+│   ├── ContributionProfitChart.tsx # → features/contribution-profit-chart
+│   ├── IntuitiveFormulaEditor.tsx  # → features/intuitive-formula-editor
+│   ├── SMPPriceTable.tsx          # → features/smp-price-table
+│   ├── AnalysisTable.tsx           # → features/analysis-table
+│   └── FormulaBlockBuilder.tsx     # → features/formula-block-builder
+├── features/                # Feature-Sliced Design: 기능별 모듈
+│   ├── formula-editor/      # 계산식 텍스트 편집기
+│   │   ├── ui/              # UI 컴포넌트
+│   │   ├── model/           # Custom Hooks (상태 관리)
+│   │   ├── lib/             # 유틸리티 함수
+│   │   ├── types.ts         # 타입 정의
+│   │   ├── constants.ts     # 상수
+│   │   └── index.ts         # Public API
+│   ├── contribution-profit-chart/  # 공헌이익 비교 차트
+│   ├── intuitive-formula-editor/   # 직관적 계산식 편집기
+│   ├── smp-price-table/            # SMP 가격 테이블
+│   ├── analysis-table/             # 분석 테이블
+│   └── formula-block-builder/      # 계산식 블록 빌더
+├── shared/                  # 공유 리소스
+│   └── formula/             # 계산식 관련 공유 로직
+│       ├── field-definitions.ts    # 필드 정의
+│       └── default-value-calculator.ts # 기본값 계산
 ├── contexts/                # Context API
 │   └── AppContext.tsx       # 전역 상태 관리
-├── lib/
+├── lib/                     # 전역 유틸리티
 │   ├── calculations.ts      # 계산 로직
 │   ├── formatters.ts        # 숫자 포맷팅
 │   ├── formula-evaluator.ts # 계산식 평가기
@@ -408,9 +509,206 @@ cursor_biosmp/
 └── package.json
 ```
 
+### 6.4 아키텍처 원칙: FSD (Feature-Sliced Design)
+
+프로젝트는 **Feature-Sliced Design** 아키텍처를 따릅니다. 각 기능(feature)은 독립적인 모듈로 구성되며, 명확한 레이어 구조를 가집니다.
+
+#### 6.4.1 디렉토리 구조
+
+각 feature는 다음 레이어로 구성됩니다:
+
+```
+features/{feature-name}/
+├── ui/              # UI 컴포넌트 (순수 React 컴포넌트)
+├── model/           # 비즈니스 로직 (Custom Hooks, 상태 관리)
+├── lib/             # 유틸리티 함수 (도메인 로직)
+├── api/             # API 호출 (필요시)
+├── types.ts         # 타입 정의
+├── constants.ts     # 상수
+└── index.ts         # Public API (외부 노출 인터페이스)
+```
+
+#### 6.4.2 레이어별 역할
+
+- **`ui/`**: 순수 UI 컴포넌트
+  - 재사용 가능한 서브 컴포넌트
+  - 50줄 이상의 UI 블록은 별도 파일로 분리
+  - Props를 통한 데이터 전달만 수행
+
+- **`model/`**: 비즈니스 로직 및 상태 관리
+  - Custom Hooks (`use{Name}.ts`)
+  - `useState`, `useEffect` 등 상태 관리 로직
+  - 비즈니스 규칙 및 계산 로직
+
+- **`lib/`**: 유틸리티 함수
+  - 순수 함수 (Pure Functions)
+  - 도메인 특화 로직
+  - 재사용 가능한 헬퍼 함수
+
+- **`api/`**: 외부 API 호출 (필요시)
+  - API 클라이언트
+  - 데이터 페칭 로직
+
+- **`types.ts`**: 타입 정의
+  - Interface, Type 정의
+  - Feature 전용 타입
+
+- **`constants.ts`**: 상수
+  - 하드코딩된 값
+  - 설정값
+
+- **`index.ts`**: Public API
+  - 외부에서 사용할 컴포넌트/함수만 export
+  - 내부 구현 세부사항은 숨김
+
+#### 6.4.3 공유 리소스 (`shared/`)
+
+여러 feature에서 공유되는 로직은 `shared/` 디렉토리에 배치합니다.
+
+```
+shared/
+└── formula/         # 계산식 관련 공유 로직
+    ├── field-definitions.ts      # 필드 정의 (여러 컴포넌트에서 사용)
+    └── default-value-calculator.ts # 기본값 계산 로직
+```
+
+### 6.5 리팩토링 가이드라인
+
+#### 6.5.1 Safe Refactoring 원칙
+
+리팩토링은 **기능 변경 없이 구조만 개선**하는 것을 원칙으로 합니다.
+
+- ✅ **허용**: 파일 분리, 함수 추출, 네이밍 개선, 타입 추가
+- ❌ **금지**: 로직 변경, 기능 추가/삭제, 동작 방식 변경
+
+#### 6.5.2 파일 분리 기준
+
+대형 컴포넌트를 리팩토링할 때 다음 기준을 따릅니다:
+
+1. **Custom Hooks 분리** (`model/use{Name}.ts`)
+   - `useState`, `useEffect` 등 상태 관리 로직
+   - 비즈니스 로직 및 계산
+   - 50줄 이상의 로직 블록
+
+2. **서브 컴포넌트 분리** (`ui/{Name}.tsx`)
+   - 50줄 이상의 UI 블록
+   - 재사용 가능한 UI 단위
+   - 명확한 책임을 가진 UI 섹션
+
+3. **타입 정의 분리** (`types.ts`)
+   - Interface, Type 정의
+   - Props 타입
+   - 도메인 모델
+
+4. **상수 분리** (`constants.ts`)
+   - 하드코딩된 값
+   - 설정값
+   - 매직 넘버/문자열
+
+5. **유틸리티 함수 분리** (`lib/{name}.ts`)
+   - 순수 함수 (Pure Functions)
+   - 도메인 독립적인 로직
+   - 재사용 가능한 헬퍼
+
+#### 6.5.3 Clean Code 원칙
+
+1. **Early Return**
+   - 중첩된 if-else 제거
+   - 가드 클로즈 패턴 활용
+
+2. **SRP (Single Responsibility Principle)**
+   - 각 함수/컴포넌트는 단일 책임만 수행
+   - 하나의 함수는 하나의 일만 처리
+
+3. **명확한 네이밍**
+   - 변수/함수명은 의도를 명확히 표현
+   - 약어 사용 최소화
+   - 한글 주석으로 비즈니스 로직 설명
+
+4. **성능 최적화**
+   - `useMemo`: 계산 비용이 큰 값 메모이제이션
+   - `useCallback`: 함수 재생성 방지
+   - 불필요한 re-render 방지
+
+#### 6.5.4 하위 호환성 유지
+
+기존 `components/` 디렉토리의 컴포넌트는 **re-export**로 유지하여 하위 호환성을 보장합니다.
+
+```typescript
+// components/TextFormulaEditor.tsx
+// Re-export from FSD structure
+export { TextFormulaEditor } from "@/features/formula-editor";
+export type { TextFormulaEditorProps } from "@/features/formula-editor";
+```
+
+이를 통해:
+- 기존 import 경로 유지
+- 점진적 마이그레이션 가능
+- Breaking change 방지
+
+#### 6.5.5 리팩토링 체크리스트
+
+대형 컴포넌트 리팩토링 시 다음을 확인합니다:
+
+- [ ] 기능 변경 없음 (Safe Refactoring)
+- [ ] Custom Hooks로 상태 관리 로직 분리
+- [ ] 50줄 이상 UI 블록은 서브 컴포넌트로 분리
+- [ ] 타입 정의는 `types.ts`로 분리
+- [ ] 상수는 `constants.ts`로 분리
+- [ ] 유틸리티 함수는 `lib/`로 분리
+- [ ] `index.ts`에 Public API만 export
+- [ ] 기존 `components/` 경로에 re-export 추가
+- [ ] 린터 오류 없음
+- [ ] 타입 안정성 확인
+
 ## 7. 주요 변경 이력
 
-### v0.2.2 (최신)
+### v0.2.4 (최신)
+- ✅ **FSD (Feature-Sliced Design) 아키텍처 전면 적용**
+  - 대형 컴포넌트를 FSD 구조로 리팩토링
+  - `features/` 디렉토리에 기능별 모듈 구성
+    - `formula-editor/`: 계산식 텍스트 편집기 (7개 lib, 4개 hooks, 7개 UI)
+    - `contribution-profit-chart/`: 공헌이익 비교 차트 (6개 lib, 4개 UI)
+    - `intuitive-formula-editor/`: 직관적 계산식 편집기 (1개 lib, 1개 hook, 7개 UI)
+    - `smp-price-table/`: SMP 가격 테이블 (2개 lib, 1개 hook, 4개 UI)
+    - `analysis-table/`: 분석 테이블 (1개 constants, 3개 UI)
+    - `formula-block-builder/`: 계산식 블록 빌더 (2개 lib, 4개 UI)
+  - `shared/formula/` 공유 리소스 생성
+    - `field-definitions.ts`: 필드 정의 중앙화
+    - `default-value-calculator.ts`: 기본값 계산 로직 공유
+  - Safe Refactoring 원칙 준수 (기능 변경 없이 구조만 개선)
+  - 하위 호환성 유지 (기존 `components/` 경로 re-export)
+  - Clean Code 원칙 적용 (Early Return, SRP, 명확한 네이밍)
+  - 모든 feature에 Public API (`index.ts`) 정의
+  - 린터 오류 없음, 타입 안정성 확보
+
+### v0.2.3
+- ✅ **계산식 편집 기능 UI/UX 개선**
+  - 변수 자동완성 방식 개선
+    - `/` 키 대신 한글 변수명 입력 시 자동완성 드롭다운 표시
+    - 입력 필드 바로 아래에 상대적으로 배치하여 위치 개선
+    - 화살표 키로 이동, Enter/Tab 키로 선택 가능
+  - 모드 선택 순서 변경
+    - 계산식(왼쪽) / 고정값(오른쪽) 순서로 배치 (기본 모드가 계산식이므로)
+  - 예상 결과 카드 디자인 개선
+    - 계산식 입력 필드와 동일한 디자인으로 통일
+    - 배경색: `bg-[#F9FAFB]` (연한 회색)
+    - Border-radius: `rounded-[16px]`
+    - 텍스트 크기: `text-[17px] font-medium` (입력 필드와 동일)
+    - Shadow 제거로 미니멀한 디자인
+  - 변수 카테고리 재구성
+    - 사용자 입력 값: 출력, SMP 가격, 송전효율, 소내소비율, PKS 단위열량, WC 단위열량, PKS 단위가격, WC 단위가격
+    - 계산 값: 발전효율, 송전량, PKS 연료사용량, WC 혼소율, PKS 발전단가, WC 발전단가, 총 발전단가, 약품비, 수전요금, 매출 전력량, 매출 REC, 매출 계, 비용 연료비, 비용 약품비, 비용 수전료, 시간당 수익
+    - 고정 값: WC 연료사용량
+  - 변수 값 태그 표시 기능 추가
+    - 입력한 계산식에 사용된 변수의 실제 값을 태그 형태로 표시
+    - 형식: "변수명 값 단위"
+    - 93MW 기준으로 계산된 값 실시간 표시
+  - 기본 공식 자동 표시
+    - 편집 모달 열기 시 기본 공식이 변수 블록 형태로 자동 입력됨
+    - 사용자가 바로 수정 가능한 상태로 표시
+
+### v0.2.2
 - ✅ **수익 비교 분석 테이블 편집 기능 개선**
   - 계산식 편집 UI 개선
     - 각 필드를 작은 블록 형태로 표시 (한 줄에 5개씩)
@@ -537,5 +835,5 @@ cursor_biosmp/
 ---
 
 **프로젝트명**: 바이오매스 공헌이익 시뮬레이터  
-**버전**: 0.2.2  
+**버전**: 0.2.4  
 **최종 업데이트**: 2024년 12월

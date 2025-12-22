@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 interface NavigationProps {
-  activeTab: "dashboard" | "simulation";
-  onTabChange: (tab: "dashboard" | "simulation") => void;
+  activeTab: "dashboard" | "simulation" | "settings";
+  onTabChange: (tab: "dashboard" | "simulation" | "settings") => void;
 }
 
 export function Navigation({ activeTab, onTabChange }: NavigationProps) {
@@ -58,6 +58,24 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
             >
               시뮬레이션
               {activeTab === "simulation" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3182F6] rounded-full" />
+              )}
+            </button>
+          </div>
+
+          {/* 우측: 설정 버튼 */}
+          <div className="absolute right-0">
+            <button
+              onClick={() => onTabChange("settings")}
+              className={cn(
+                "h-[56px] px-6 text-[17px] font-medium transition-all duration-200 relative active:scale-[0.96]",
+                activeTab === "settings"
+                  ? "text-[#3182F6]"
+                  : "text-[#4E5968] hover:text-[#191F28]"
+              )}
+            >
+              설정
+              {activeTab === "settings" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3182F6] rounded-full" />
               )}
             </button>

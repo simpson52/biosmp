@@ -108,6 +108,54 @@ export interface PlantAnalysisResult {
 // 데이터 소스 타입
 export type DataSource = "manual" | "exchange";
 
+// 계산식 편집 타입
+export type CalculationMode = "formula" | "fixed";
+
+// 수익 비교 분석 테이블 인자 타입
+export type AnalysisTableField =
+  | "transmissionAmount" // 송전량
+  | "generationEfficiency" // 발전효율
+  | "transmissionEfficiency" // 송전효율
+  | "internalConsumptionRate" // 소내소비율
+  | "wcCoFiringRate" // WC 혼소율
+  | "pksGenerationCost" // PKS 발전단가
+  | "wcGenerationCost" // WC 발전단가
+  | "totalGenerationCost" // 총 발전단가
+  | "chemicalCost" // 약품비
+  | "waterFee" // 수전요금
+  | "salesPower" // 매출 전력량
+  | "salesREC" // 매출 REC
+  | "salesTotal" // 매출 계
+  | "pksFuelConsumption" // PKS 연료사용량
+  | "wcFuelConsumption" // WC 연료사용량
+  | "costFuel" // 비용 연료비
+  | "costChemical" // 비용 약품비
+  | "costWater" // 비용 수전료
+  | "contributionProfit" // 공헌이익
+  | "hourlyExpectedProfit"; // 시간당 수익
+
+// 계산식 편집 설정
+export interface CalculationFormula {
+  // 계산식 모드 (formula: 계산식 사용, fixed: 고정값 사용)
+  mode: CalculationMode;
+  // 계산식 (JavaScript 표현식 문자열, mode가 "formula"일 때 사용)
+  formula?: string;
+  // 고정값 (mode가 "fixed"일 때 사용)
+  fixedValue?: number;
+}
+
+// 수익 비교 분석 테이블 계산식 설정
+export interface AnalysisTableFormulas {
+  // 각 인자별 계산식 설정
+  [field: string]: CalculationFormula;
+}
+
+// 계산식 편집 설정 전체
+export interface CalculationSettings {
+  // 수익 비교 분석 테이블 계산식 설정
+  analysisTableFormulas: AnalysisTableFormulas;
+}
+
 // 전체 애플리케이션 상태
 export interface AppState {
   // 기본 입력 파라미터
@@ -126,5 +174,7 @@ export interface AppState {
   curtailmentThreshold: number;
   // 현재 표시 중인 SMP 데이터 (매뉴얼 또는 전력거래소)
   currentSMPData: HourlySMPData;
+  // 계산식 편집 설정
+  calculationSettings: CalculationSettings;
 }
 

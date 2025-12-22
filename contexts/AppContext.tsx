@@ -9,6 +9,8 @@ import type {
   OutputLevel,
   HourlySMPData,
   DataSource,
+  CalculationSettings,
+  AnalysisTableFormulas,
 } from "@/types";
 import { loadStateFromStorage, saveStateToStorage } from "@/lib/storage";
 
@@ -21,6 +23,7 @@ interface AppContextType {
   updateCurrentSMPData: (data: HourlySMPData) => void;
   updateExchangeSMPData: (data: HourlySMPData | null) => void;
   updateCurrentDataSource: (source: DataSource) => void;
+  updateCalculationSettings: (settings: CalculationSettings) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -88,6 +91,9 @@ const defaultState: AppState = {
       },
     ],
   }, // 현재 표시 중인 SMP 데이터 (기본값: 매뉴얼 데이터)
+  calculationSettings: {
+    analysisTableFormulas: {},
+  },
 };
 
 export function AppProvider({ children }: { readonly children: React.ReactNode }) {
@@ -106,6 +112,7 @@ export function AppProvider({ children }: { readonly children: React.ReactNode }
         exchangeSMPData: savedState.exchangeSMPData ?? defaultState.exchangeSMPData,
         currentDataSource: savedState.currentDataSource || defaultState.currentDataSource,
         currentSMPData: savedState.currentSMPData || savedState.hourlySMPData || defaultState.hourlySMPData,
+        calculationSettings: savedState.calculationSettings || defaultState.calculationSettings,
       };
       setState(mergedState);
     }
@@ -175,6 +182,13 @@ export function AppProvider({ children }: { readonly children: React.ReactNode }
     }));
   }, []);
 
+  const updateCalculationSettings = useCallback((settings: CalculationSettings) => {
+    setState((prev) => ({
+      ...prev,
+      calculationSettings: settings,
+    }));
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       state,
@@ -185,8 +199,9 @@ export function AppProvider({ children }: { readonly children: React.ReactNode }
       updateCurrentSMPData,
       updateExchangeSMPData,
       updateCurrentDataSource,
+      updateCalculationSettings,
     }),
-    [state, updateCurrentSMPData, updateExchangeSMPData, updateCurrentDataSource]
+    [state, updateCurrentSMPData, updateExchangeSMPData, updateCurrentDataSource, updateCalculationSettings]
   );
 
   return (

@@ -31,6 +31,7 @@ export function Simulation() {
             inputParameters={state.inputParameters}
             plantRowInputs={state.plantRowInputs}
             onPlantRowInputChange={updatePlantRowInput}
+            formulas={state.calculationSettings.analysisTableFormulas}
           />
         </CardContent>
       </Card>
@@ -44,6 +45,7 @@ export function Simulation() {
         <ContributionProfitChart
           inputParameters={state.inputParameters}
           plantRowInputs={state.plantRowInputs}
+          formulas={state.calculationSettings.analysisTableFormulas}
         />
 
         {/* 오른쪽 카드: 감발 요약 테이블 */}
@@ -52,6 +54,7 @@ export function Simulation() {
           inputParameters={state.inputParameters}
           plantRowInputs={state.plantRowInputs}
           curtailmentThreshold={state.curtailmentThreshold}
+          formulas={state.calculationSettings.analysisTableFormulas}
         />
       </div>
     </div>

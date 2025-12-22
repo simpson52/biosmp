@@ -4,7 +4,9 @@ import type {
   PlantAnalysisResult,
   OutputLevel,
   CurtailmentThresholds,
+  AnalysisTableFormulas,
 } from "@/types";
+import { getCalculatedValue } from "./formula-evaluator";
 
 // 고정 상수
 const WC_FUEL_CONSUMPTION = 700; // 톤/일
@@ -256,104 +258,426 @@ export function calculatePlantAnalysis(
   output: OutputLevel | number,
   inputParams: InputParameters,
   rowInput: PlantRowInput,
-  smp: number
+  smp: number,
+  formulas?: AnalysisTableFormulas
 ): PlantAnalysisResult {
+  // 계산 컨텍스트 준비 (계산식 평가에 사용)
+  const createContext = (intermediateValues: Record<string, number>) => ({
+    output: output as number,
+    smp,
+    transmissionEfficiency: rowInput.transmissionEfficiency,
+    internalConsumptionRate: rowInput.internalConsumptionRate,
+    pksCalorificValue: inputParams.pksCalorificValue,
+    wcCalorificValue: inputParams.wcCalorificValue,
+    pksUnitPrice: inputParams.pksUnitPrice,
+    wcUnitPrice: inputParams.wcUnitPrice,
+    ...intermediateValues,
+  });
+
   // 1. 송전량 계산 (MWh/h) - 시간당 송전량
-  const transmissionAmount = calculateTransmissionAmount(
+  const defaultTransmissionAmount = calculateTransmissionAmount(
     output,
     rowInput.internalConsumptionRate
   );
+  const transmissionAmount = formulas
+    ? getCalculatedValue(
+        "transmissionAmount",
+        formulas,
+        createContext({}),
+        defaultTransmissionAmount
+      )
+    : defaultTransmissionAmount;
 
   // 시간당 송전량 (매출 계산에 사용)
   const hourlyTransmissionAmount = transmissionAmount;
 
   // 2. 발전효율 계산 (%)
-  const generationEfficiency = calculateGenerationEfficiency(
+  const defaultGenerationEfficiency = calculateGenerationEfficiency(
     rowInput.transmissionEfficiency,
     rowInput.internalConsumptionRate
   );
+  const generationEfficiency = formulas
+    ? getCalculatedValue(
+        "generationEfficiency",
+        formulas,
+        createContext({ transmissionAmount }),
+        defaultGenerationEfficiency
+      )
+    : defaultGenerationEfficiency;
 
   // 3. PKS 연료사용량 계산 (톤/일)
-  const pksFuelConsumption = calculatePKSFuelConsumption(
+  const defaultPksFuelConsumption = calculatePKSFuelConsumption(
     output,
     generationEfficiency,
     inputParams.wcCalorificValue,
     inputParams.pksCalorificValue
   );
+  const pksFuelConsumption = formulas
+    ? getCalculatedValue(
+        "pksFuelConsumption",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+        }),
+        defaultPksFuelConsumption
+      )
+    : defaultPksFuelConsumption;
 
   // 4. WC 혼소율 계산 (%)
-  const wcCoFiringRate = calculateWCCoFiringRate(
+  const defaultWcCoFiringRate = calculateWCCoFiringRate(
     pksFuelConsumption,
     inputParams.pksCalorificValue,
     inputParams.wcCalorificValue
   );
+  const wcCoFiringRateRaw = formulas
+    ? getCalculatedValue(
+        "wcCoFiringRate",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+        }),
+        defaultWcCoFiringRate
+      )
+    : defaultWcCoFiringRate;
+  // 백분율로 변환 (0-1 범위를 0-100으로)
+  const wcCoFiringRate = wcCoFiringRateRaw > 1 ? wcCoFiringRateRaw : wcCoFiringRateRaw * 100;
 
   // 5. PKS 발전단가 계산 (원/kWh)
-  const pksGenerationCost = calculatePKSGenerationCost(
+  const defaultPksGenerationCost = calculatePKSGenerationCost(
     inputParams.pksUnitPrice,
     inputParams.pksCalorificValue,
     rowInput.transmissionEfficiency
   );
+  const pksGenerationCost = formulas
+    ? getCalculatedValue(
+        "pksGenerationCost",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+        }),
+        defaultPksGenerationCost
+      )
+    : defaultPksGenerationCost;
 
   // 6. WC 발전단가 계산 (원/kWh)
-  const wcGenerationCost = calculateWCGenerationCost(
+  const defaultWcGenerationCost = calculateWCGenerationCost(
     inputParams.wcUnitPrice,
     inputParams.wcCalorificValue,
     rowInput.transmissionEfficiency
   );
+  const wcGenerationCost = formulas
+    ? getCalculatedValue(
+        "wcGenerationCost",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+        }),
+        defaultWcGenerationCost
+      )
+    : defaultWcGenerationCost;
 
   // 총 발전단가
-  const totalGenerationCost =
-    pksGenerationCost * (1 - wcCoFiringRate) +
-    wcGenerationCost * wcCoFiringRate;
+  const defaultTotalGenerationCost =
+    pksGenerationCost * (1 - wcCoFiringRateRaw) +
+    wcGenerationCost * wcCoFiringRateRaw;
+  const totalGenerationCost = formulas
+    ? getCalculatedValue(
+        "totalGenerationCost",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+        }),
+        defaultTotalGenerationCost
+      )
+    : defaultTotalGenerationCost;
 
   // 7. 약품비 계산 (원/kWh)
-  const chemicalCost = calculateChemicalCost(output);
+  const defaultChemicalCost = calculateChemicalCost(output);
+  const chemicalCost = formulas
+    ? getCalculatedValue(
+        "chemicalCost",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+        }),
+        defaultChemicalCost
+      )
+    : defaultChemicalCost;
 
   // 8. 수전요금 계산 (원/kWh)
-  const waterFee = calculateWaterFee(hourlyTransmissionAmount);
+  const defaultWaterFee = calculateWaterFee(hourlyTransmissionAmount);
+  const waterFee = formulas
+    ? getCalculatedValue(
+        "waterFee",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+        }),
+        defaultWaterFee
+      )
+    : defaultWaterFee;
 
   // 9. 매출 전력량 계산 (백만원)
-  const salesPower = calculateSalesPower(
+  const defaultSalesPower = calculateSalesPower(
     smp,
     output,
     rowInput.internalConsumptionRate
   );
+  const salesPower = formulas
+    ? getCalculatedValue(
+        "salesPower",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+        }),
+        defaultSalesPower
+      )
+    : defaultSalesPower;
 
   // 10. 매출 REC 계산 (백만원)
-  const salesREC = calculateSalesREC(output, rowInput.internalConsumptionRate);
+  const defaultSalesREC = calculateSalesREC(output, rowInput.internalConsumptionRate);
+  const salesREC = formulas
+    ? getCalculatedValue(
+        "salesREC",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+        }),
+        defaultSalesREC
+      )
+    : defaultSalesREC;
 
   // 11. 매출 계 계산 (백만원)
-  const salesTotal = salesPower + salesREC;
+  const defaultSalesTotal = salesPower + salesREC;
+  const salesTotal = formulas
+    ? getCalculatedValue(
+        "salesTotal",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+          salesREC,
+        }),
+        defaultSalesTotal
+      )
+    : defaultSalesTotal;
+
+  // WC 연료사용량 (고정값)
+  const wcFuelConsumption = formulas
+    ? getCalculatedValue(
+        "wcFuelConsumption",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+        }),
+        WC_FUEL_CONSUMPTION
+      )
+    : WC_FUEL_CONSUMPTION;
 
   // 12. 비용 연료비 계산 (백만원)
-  const costFuel = calculateCostFuel(
+  const defaultCostFuel = calculateCostFuel(
     pksFuelConsumption,
     inputParams.pksUnitPrice,
     inputParams.wcUnitPrice
   );
+  const costFuel = formulas
+    ? getCalculatedValue(
+        "costFuel",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+          salesREC,
+          salesTotal,
+        }),
+        defaultCostFuel
+      )
+    : defaultCostFuel;
 
   // 13. 비용 약품비 계산 (백만원)
-  const costChemical = calculateCostChemical(
+  const defaultCostChemical = calculateCostChemical(
     output,
     rowInput.internalConsumptionRate,
     chemicalCost
   );
+  const costChemical = formulas
+    ? getCalculatedValue(
+        "costChemical",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+          salesREC,
+          salesTotal,
+          costFuel,
+        }),
+        defaultCostChemical
+      )
+    : defaultCostChemical;
 
   // 14. 비용 수전료 계산 (백만원)
-  const costWater = calculateCostWater(
+  const defaultCostWater = calculateCostWater(
     output,
     rowInput.internalConsumptionRate,
     waterFee
   );
+  const costWater = formulas
+    ? getCalculatedValue(
+        "costWater",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+          salesREC,
+          salesTotal,
+          costFuel,
+          costChemical,
+        }),
+        defaultCostWater
+      )
+    : defaultCostWater;
 
   // 15. 공헌이익 계산 (백만원/일)
-  const contributionProfit =
+  const defaultContributionProfit =
     salesTotal - (costFuel + costChemical + costWater);
+  const contributionProfit = formulas
+    ? getCalculatedValue(
+        "contributionProfit",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+          salesREC,
+          salesTotal,
+          costFuel,
+          costChemical,
+          costWater,
+        }),
+        defaultContributionProfit
+      )
+    : defaultContributionProfit;
 
   // 16. 시간당 기대수익 계산 (만원)
-  const hourlyExpectedProfit =
+  const defaultHourlyExpectedProfit =
     calculateHourlyExpectedProfit(contributionProfit);
+  const hourlyExpectedProfit = formulas
+    ? getCalculatedValue(
+        "hourlyExpectedProfit",
+        formulas,
+        createContext({
+          transmissionAmount,
+          generationEfficiency,
+          pksFuelConsumption,
+          wcFuelConsumption,
+          wcCoFiringRate: wcCoFiringRateRaw,
+          pksGenerationCost,
+          wcGenerationCost,
+          totalGenerationCost,
+          chemicalCost,
+          waterFee,
+          salesPower,
+          salesREC,
+          salesTotal,
+          costFuel,
+          costChemical,
+          costWater,
+          contributionProfit,
+        }),
+        defaultHourlyExpectedProfit
+      )
+    : defaultHourlyExpectedProfit;
 
   return {
     output: output as OutputLevel, // 타입 호환성을 위해 OutputLevel로 변환
@@ -361,14 +685,14 @@ export function calculatePlantAnalysis(
     generationEfficiency,
     transmissionEfficiency: rowInput.transmissionEfficiency,
     internalConsumptionRate: rowInput.internalConsumptionRate,
-    wcCoFiringRate: wcCoFiringRate * 100, // 백분율로 변환
+    wcCoFiringRate: wcCoFiringRate, // 이미 백분율로 변환됨
     pksGenerationCost,
     wcGenerationCost,
     totalGenerationCost,
     chemicalCost,
     waterFee,
     pksFuelConsumption,
-    wcFuelConsumption: WC_FUEL_CONSUMPTION,
+    wcFuelConsumption,
     pksCalorificValue: inputParams.pksCalorificValue,
     wcCalorificValue: inputParams.wcCalorificValue,
     pksUnitPrice: inputParams.pksUnitPrice,
